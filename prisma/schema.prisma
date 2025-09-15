@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TranslationMemory {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Text content
+  sourceText     String @map("source_text")
+  targetText     String @map("target_text")
+  correctedText  String? @map("corrected_text")
+  
+  // Context and metadata
+  context        String?
+  domain         String?  // e.g., "medical", "legal", "casual"
+  dialect        Dialect? // e.g., Lovari, Kelderash, Arli
+  tags           String[] @default([])
+  
+  // Quality tracking
+  qualityScore   QualityScore @default(C) @map("quality_score")
+  reviewStatus   ReviewStatus @default(PENDING) @map("review_status")
+  reviewNotes    String? @map("review_notes")
+  reviewedAt     DateTime? @map("reviewed_at")
+  reviewedBy     String? @map("reviewed_by")
+  
+  // Embeddings for hybrid search
+  // Single combined embedding (source + corrected/target)
+  embedding  Unsupported("vector(1536)")? @map("embedding")
+  
+  // Relationships
+  corrections    Correction[]
+  reviewItems    ReviewItem[]
+  generatedInsights LearningInsight[]
+
+  @@map("translation_memory")
+}
+
+model Correction {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // What was corrected
+  originalText   String @map("original_text")
+  correctedText  String @map("corrected_text")
+  correctionType CorrectionType @map("correction_type")
+  explanation    String?
+  
+  // Quality assessment
+  severity       CorrectionSeverity
+  
+  // Relationships
+  translationId  String @map("translation_id")
+  translation    TranslationMemory @relation(fields: [translationId], references: [id], onDelete: Cascade)
+
+  @@map("corrections")
+}
+
+model ReviewItem {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Review details
+  status        ReviewStatus @default(PENDING)
+  reviewerNotes String? @map("reviewer_notes")
+  reviewedAt    DateTime? @map("reviewed_at")
+  reviewedBy    String? @map("reviewed_by")
+  
+  // Priority and assignment
+  priority      Priority @default(MEDIUM)
+  assignedTo    String? @map("assigned_to")
+  
+  // Relationships
+  translationId String @map("translation_id")
+  translation   TranslationMemory @relation(fields: [translationId], references: [id], onDelete: Cascade)
+
+  @@map("review_items")
+}
+
+model KnowledgeItem {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Content
+  title       String
+  content     String
+  category    String?
+  tags        String[] @default([])
+  
+  // Search and retrieval
+  embedding   Unsupported("vector(1536)")?
+  
+  // Quality and usage
+  qualityScore QualityScore @default(C) @map("quality_score")
+  usageCount   Int          @default(0) @map("usage_count")
+  lastUsed     DateTime?    @map("last_used")
+
+  @@map("knowledge_items")
+}
+
+/// Dedicated tables for ingestion per the Resource-Ingestion-plan
+model RomaniLexicon {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  sourceText String   @map("source_text")
+  targetText String   @map("target_text")
+  dialect    Dialect?
+  domain     String?  // vocab
+  provenance Json?    // { filename, jobId, index }
+
+  /// Combined embedding for the pair (source + target)
+  embedding    Unsupported("vector(1536)")? @map("embedding")
+  /// tags for filtering/search
+  tags         String[] @default([])
+
+  qualityScore QualityScore @default(C) @map("quality_score")
+  reviewStatus ReviewStatus @default(PENDING) @map("review_status")
+
+  @@map("romani_lexicon")
+}
+
+model RomaniGrammar {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  documentId  String?   @map("document_id")
+  filename    String?
+  chunkIndex  Int?      @map("chunk_index")
+  content     String
+  dialect     Dialect?
+  tags        String[]  @default([])
+  provenance  Json?     // free-form
+
+  embedding   Unsupported("vector(1536)")? @map("embedding")
+  qualityScore QualityScore @default(C) @map("quality_score")
+
+  @@map("romani_grammar")
+}
+
+model RomaniStyle {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  title      String?
+  content    String
+  dialect    Dialect?
+  tags       String[] @default([])
+  provenance Json?
+
+  embedding   Unsupported("vector(1536)")? @map("embedding")
+  qualityScore QualityScore @default(C) @map("quality_score")
+
+  @@map("romani_style")
+}
+
+/// Ingestion tracking for uploads/pipelines
+model IngestionJob {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Job metadata
+  sourceType    String   // e.g., grammar|vocab|parallel|raw
+  filename      String?
+  dialect       Dialect?
+  status        IngestionStatus @default(PENDING)
+  totalItems    Int      @default(0) @map("total_items")
+  processedItems Int     @default(0) @map("processed_items")
+  errorMessage  String?  @map("error_message")
+  startedAt     DateTime? @map("started_at")
+  finishedAt    DateTime? @map("finished_at")
+
+  // Relations
+  records       IngestionRecord[]
+
+  @@map("ingestion_jobs")
+}
+
+model IngestionRecord {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  jobId      String   @map("job_id")
+  job        IngestionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  targetTable String   @map("target_table") // translation_memory | knowledge_items
+  targetId     String   @map("target_id")
+  status       IngestionItemStatus @default(INSERTED)
+  errorMessage String?  @map("error_message")
+
+  preview     String?   // short snippet for UI
+
+  @@map("ingestion_records")
+  }
+
+  model LearningInsight {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // The core insight generated by the Analyzer AI
+    rule        String   @db.Text
+    category    String
+    confidence  Float
+    explanation String?  @db.Text
+    embedding   Unsupported("vector(1536)")?
+
+    // --- Contextual Metadata ---
+    domain      String?   // e.g., "mythology", "medical", "casual"
+    tags        String[] // e.g., ["formal", "dialogue"]
+
+    // Link back to the source of this insight
+    sourceTranslationMemoryId String?
+    sourceTranslationMemory   TranslationMemory? @relation(fields: [sourceTranslationMemoryId], references: [id])
+  }
+
+  enum IngestionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum IngestionItemStatus {
+  INSERTED
+  FAILED
+}
+
+// Enums
+enum QualityScore {
+  A  // Excellent
+  B  // Good
+  C  // Acceptable
+  D  // Poor
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_REVISION
+}
+
+enum CorrectionType {
+  GRAMMAR
+  VOCABULARY
+  STYLE
+  CULTURAL
+  FACTUAL
+  OTHER
+}
+
+enum CorrectionSeverity {
+  MINOR
+  MODERATE
+  MAJOR
+  CRITICAL
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum Dialect {
+  Lovari
+  Kelderash
+  Arli
+}

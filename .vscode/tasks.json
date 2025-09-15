@@ -1,0 +1,25 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Type Check",
+			"type": "shell",
+			"command": "npm run type-check",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc - pretty"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Prisma Migrate Tags",
+			"type": "shell",
+			"command": "npx prisma migrate dev --name add_tm_tags",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc - pretty"
+			],
+			"group": "build"
+		}
+	]
+}
