@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { generateEmbedding } from '@/lib/embedding';
 import { authFallback as auth } from '@/lib/auth';
 import { generateLearningInsight } from '@/lib/ai-analyzer';
-import { Prisma, QualityScore } from '@prisma/client';
+import type { QualityScore } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,7 +38,19 @@ export async function POST(request: NextRequest) {
     const qualityScore: QualityScore = wasCorrection ? 'B' : 'A'; // Corrected = B, Approved = A
 
     // Save to database (without embeddings first)
-    const data: Prisma.TranslationMemoryCreateInput = {
+    type CreateTranslationMemoryInput = {
+      sourceText: string;
+      targetText?: string | null;
+      correctedText?: string | null;
+      context?: string | null;
+      domain?: string | null;
+      qualityScore: QualityScore;
+      reviewStatus: string;
+      reviewedBy?: string | null;
+      reviewedAt?: Date | null;
+    };
+
+    const data: CreateTranslationMemoryInput = {
       sourceText: sourceText.trim(),
       targetText: originalTranslation,
       correctedText: wasCorrection ? correctedTranslation.trim() : null,
@@ -49,7 +61,8 @@ export async function POST(request: NextRequest) {
       reviewedBy: userId,
       reviewedAt: new Date(),
     };
-    const translation = await prisma.translationMemory.create({ data });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const translation = await prisma.translationMemory.create({ data: data as any });
 
     // Persist dialect using raw SQL to avoid client type drift
     try {
