@@ -3,6 +3,8 @@ import { ReviewList } from '@/components/review/ReviewList';
 import { authFallback as auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ReviewPage() {
   const requireAuth = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   if (requireAuth) {
