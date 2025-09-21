@@ -90,3 +90,20 @@ Please refer to the [Development Specification](dev-spec-romani-trans-app.md) fo
 ## License
 
 This project is licensed under the MIT License.
+
+### Seeding and moving a local database to Supabase
+
+If you want to populate your Supabase project from your local development database, follow these steps carefully:
+
+1. Ensure `DATABASE_URL` in `.env` points to your Supabase connection string. Prisma reads `./.env` by default.
+2. If the remote Postgres only exposes IPv6 and your machine has no IPv6 route, you can use Cloudflare WARP to provide IPv6 outbound (we used it during setup).
+3. Enable the `pgvector` extension on the Supabase DB before running `prisma db push` or seeding:
+
+   CREATE EXTENSION IF NOT EXISTS vector;
+
+4. Push the Prisma schema and generate client, then seed:
+
+   npm run db:push
+   npm run db:seed
+
+5. To transfer a full local DB to Supabase, use the supplied script at `scripts/transfer-db.sh`. It uses `pg_dump` and `pg_restore` and will prompt before performing remote restore. Review the script and back up remote data before running.

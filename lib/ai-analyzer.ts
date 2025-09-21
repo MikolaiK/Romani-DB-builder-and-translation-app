@@ -81,6 +81,7 @@ export async function generateLearningInsight(
         prompt,
         temperature: 0.2,
       });
+      console.log('[AI Analyzer] Raw response:', text?.slice?.(0,200));
       return text;
     };
 
@@ -93,14 +94,38 @@ export async function generateLearningInsight(
         text = await call(useFallback);
         
         // Parse the JSON response
-        const jsonStart = text.indexOf("{");
-        const jsonEnd = text.lastIndexOf("}") + 1;
-        const jsonString = text.substring(jsonStart, jsonEnd);
-        
-        // Validate that we have a valid JSON string
-        if (jsonString.length > 0) {
-          const insight: LearningInsight = JSON.parse(jsonString);
-          return insight;
+        try {
+          const jsonStart = text.indexOf("{");
+          const jsonEnd = text.lastIndexOf("}") + 1;
+          const jsonString = text.substring(jsonStart, jsonEnd);
+          console.log('[AI Analyzer] Extracted JSON string:', jsonString?.slice?.(0,200));
+          // Validate that we have a valid JSON string
+          if (jsonString.length > 0) {
+            const insight: LearningInsight = JSON.parse(jsonString);
+            return insight;
+          }
+        } catch (parseErr) {
+          console.warn('[AI Analyzer] Failed to parse JSON response:', parseErr, 'raw:', text?.slice?.(0,400));
+          // If the SDK reports an invalid JSON from the provider, it may be available on the thrown error's responseBody.
+          // Try to recover from a provider error object if present on the last caught error.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const lastError: any = (parseErr && (parseErr as any).cause) || parseErr;
+          try {
+            if (lastError && lastError.responseBody) {
+              const raw = lastError.responseBody;
+              const s = typeof raw === 'string' ? raw : JSON.stringify(raw);
+              const sStart = s.indexOf('{');
+              const sEnd = s.lastIndexOf('}') + 1;
+              if (sStart > -1 && sEnd > sStart) {
+                const recovered = s.substring(sStart, sEnd);
+                console.log('[AI Analyzer] Attempting to recover JSON from error.responseBody:', recovered?.slice?.(0,200));
+                const insight: LearningInsight = JSON.parse(recovered);
+                return insight;
+              }
+            }
+          } catch (recoveryErr) {
+            console.warn('[AI Analyzer] Recovery attempt failed:', recoveryErr);
+          }
         }
       } catch (e) {
         lastErr = e;

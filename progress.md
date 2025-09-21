@@ -221,5 +221,13 @@ npm run db:indexes
   - Consider adding a lightweight health endpoint that reports which key is active (dev-only), and a metrics/counter for the number of fallback occurrences to monitor stability.
   - Optionally add a second provider fallback (OpenAI-compatible) behind a feature flag for higher availability.
 
+### 2025-09-15 — Local -> Supabase sync and seeding
+
+- Debugged connectivity to Supabase (host resolved to IPv6-only). Used Cloudflare WARP locally to provide IPv6 outbound routing for development.
+- Enabled `pgvector` extension in the Supabase database and fixed Prisma schema push errors.
+- Ran `npm run db:seed` and verified seeded data (knowledgeItems and translationMemory) were inserted into Supabase.
+
+Next: Provide a safe migration script to transfer a full local Postgres dump to Supabase. See `scripts/transfer-db.sh` for a guided workflow.
+
 ---
 Use this file to orient before coding. Update it when you add features or change flows so it stays a reliable companion to `dev-spec-romani-trans-app.md`.

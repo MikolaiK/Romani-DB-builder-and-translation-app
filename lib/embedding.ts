@@ -6,7 +6,9 @@ type Dialect = 'Lovari' | 'Kelderash' | 'Arli';
 
 // Initialize embedding provider
 const embeddingModel = google('gemini-embedding-001');
-const HAS_AI_KEY = !!process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+// Accept either the canonical env name or the older *_TRANSLATE name used in some .env files
+const AI_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY_TRANSLATE;
+const HAS_AI_KEY = !!AI_KEY;
 
 export async function generateEmbedding(text: string, opts?: { dialect?: Dialect }): Promise<number[]> {
   try {
@@ -38,7 +40,7 @@ export async function generateEmbedding(text: string, opts?: { dialect?: Dialect
       .map((_, i) => ((i * 37 + cleanText.length * 13) % 100) / 100);
 
     // Fallback for local dev without API key
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    if (!AI_KEY) {
       return fallback();
     }
 

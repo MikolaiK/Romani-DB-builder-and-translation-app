@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const {
+  const {
       sourceText,
       originalTranslation,
       correctedTranslation,
@@ -21,6 +21,8 @@ export async function POST(request: NextRequest) {
       domain,
       dialect,
     } = await request.json();
+
+  console.log('🔔 /api/correct called with', { sourceText: sourceText?.slice?.(0,200), originalTranslation, correctedTranslation, context, domain, dialect });
 
     if (!sourceText?.trim() || !correctedTranslation?.trim()) {
       return NextResponse.json(
@@ -36,6 +38,9 @@ export async function POST(request: NextRequest) {
     // Determine quality score based on whether correction was made
     const wasCorrection = originalTranslation !== correctedTranslation;
     const qualityScore: QualityScore = wasCorrection ? 'B' : 'A'; // Corrected = B, Approved = A
+
+  // Debug log to confirm whether we detected a correction
+  console.log('🪪 Debug: originalTranslation=', originalTranslation, 'correctedTranslation=', correctedTranslation, 'wasCorrection=', wasCorrection);
 
     // Save to database (without embeddings first)
     type CreateTranslationMemoryInput = {
@@ -103,62 +108,94 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Trigger the learning loop asynchronously (fire-and-forget)
+    // Trigger the learning loop asynchronously but await it (bounded) so Vercel doesn't kill it
     if (wasCorrection) {
-      const triggerLearningLoop = async () => {
-        try {
-          // Generate learning insight using the AI analyzer
-          const insightData = await generateLearningInsight(
-            sourceText.trim(),
-            originalTranslation,
-            correctedTranslation.trim(),
-            dialect || 'Lovari',
-            domain || '',
-            [] // Empty tags array for now
-          );
-
-          // Only proceed if we got insight data
-          if (insightData) {
-            console.log("✅ Generated learning insight:", insightData);
-            
-            // Generate embedding for the rule
-            const ruleEmbedding = await generateEmbedding(insightData.rule, { dialect: dialect as 'Lovari' | 'Kelderash' | 'Arli' | undefined });
-            console.log("✅ Generated rule embedding with length:", ruleEmbedding.length);
-
-            // Save the learning insight to the database
-            const learningInsight = await prisma.learningInsight.create({
-              data: {
-                rule: insightData.rule,
-                category: insightData.category,
-                confidence: insightData.confidence,
-                explanation: insightData.explanation,
-                sourceTranslationMemoryId: translation.id,
-                domain: domain,
-                tags: [], // Empty tags array for now
-              }
-            });
-            console.log("✅ Created learning insight in database:", learningInsight.id);
-            
-            // Update the embedding using raw SQL
-            try {
-              console.log("🔍 Updating learning insight embedding for ID:", learningInsight.id);
-              await prisma.$executeRawUnsafe(
-                `UPDATE "LearningInsight" SET embedding = $1::vector WHERE id = $2`,
-                `[${ruleEmbedding.join(',')}]`,
-                learningInsight.id
-              );
-              console.log("✅ Successfully updated learning insight embedding");
-            } catch (e) {
-              console.error('Failed to store learning insight embedding, continuing without it:', e);
+        const triggerLearningLoop = async (translationId: string) => {
+          // create a small run id for tracing across logs
+          const runId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+          console.log('\ud83d\udd14 Starting learning loop (correction) run:', runId, 'translationId:', translationId);
+          try {
+            // Re-fetch the translation row to avoid any closure/race issues
+            const row = await prisma.translationMemory.findUnique({ where: { id: translationId } });
+            if (!row) {
+              console.warn('[learning-loop] translation row not found for id:', translationId);
+              return;
             }
-          }
-        } catch (error) {
-          console.error("Failed to generate learning insight:", error);
-        }
-      };
 
-      // Fire-and-forget: Call without await
-      triggerLearningLoop();
+            const dialectRow = (row.dialect as string) || 'Lovari';
+            const domainRow = row.domain || '';
+            const src = row.sourceText || '';
+            const original = row.targetText || '';
+            const corrected = row.correctedText || row.targetText || '';
+
+            console.log('[learning-loop]', runId, 'using source snippet:', src.slice(0,80));
+
+            // Generate learning insight using the AI analyzer with fresh DB values
+            const insightData = await generateLearningInsight(
+              src,
+              original,
+              corrected,
+              dialectRow,
+              domainRow,
+              [] // tags
+            );
+
+            // Only proceed if we got insight data
+            if (insightData) {
+              console.log('[learning-loop]', runId, '\u2705 Generated learning insight:', insightData);
+
+              // Create a placeholder learning insight immediately to reserve association with this translation
+              const placeholder = await prisma.learningInsight.create({
+                data: {
+                  rule: insightData.rule.slice(0, 64), // short provisional text
+                  category: insightData.category,
+                  confidence: insightData.confidence || 0,
+                  explanation: insightData.explanation?.slice?.(0, 200) || '',
+                  sourceTranslationMemoryId: translationId,
+                  domain: domainRow || null,
+                  tags: [],
+                }
+              });
+              console.log('[learning-loop]', runId, '\u2705 Created placeholder learning insight in database:', placeholder.id);
+
+              // Generate embedding for the rule
+              const ruleEmbedding = await generateEmbedding(insightData.rule, { dialect: dialectRow as 'Lovari' | 'Kelderash' | 'Arli' | undefined });
+              console.log('[learning-loop]', runId, '\u2705 Generated rule embedding with length:', ruleEmbedding.length);
+
+              // Update the placeholder row with final values
+              try {
+                const updated = await prisma.learningInsight.update({ where: { id: placeholder.id }, data: {
+                  rule: insightData.rule,
+                  explanation: insightData.explanation,
+                  confidence: insightData.confidence,
+                }});
+                console.log('[learning-loop]', runId, '\u2705 Updated placeholder with final insight:', updated.id);
+
+                // Update the embedding using raw SQL
+                await prisma.$executeRawUnsafe(
+                  `UPDATE "LearningInsight" SET embedding = $1::vector WHERE id = $2`,
+                  `[${ruleEmbedding.join(',')}]`,
+                  updated.id
+                );
+                console.log('[learning-loop]', runId, '\u2705 Successfully updated learning insight embedding');
+              } catch (e) {
+                console.error('[learning-loop] Failed to update placeholder or embedding:', e);
+              }
+            }
+          } catch (error) {
+            console.error('[learning-loop] Failed to generate learning insight:', error);
+          }
+        };
+
+      // Await the loop (bounded) so serverless doesn't kill it prematurely
+      try {
+        // Synchronously await the learning loop to enforce correct ordering while debugging
+        console.log('[learning-loop] awaiting learning loop synchronously for id:', translation.id);
+        await triggerLearningLoop(translation.id);
+        console.log('[learning-loop] completed for id:', translation.id);
+      } catch (e) {
+        console.error('Learning loop failed:', e);
+      }
     }
 
     return NextResponse.json({
