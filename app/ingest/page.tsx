@@ -69,15 +69,15 @@ export default function IngestPage() {
                 const copy = { ...prepared, grammarChunks: prepared.grammarChunks.map((g, i) => i === index ? text : g) };
                 setPrepared(copy);
                 setEdit(false);
-              }}>Save</Button>
-              <Button variant="secondary" onClick={() => { setText(value); setEdit(false); }}>Cancel</Button>
+              }}>Spara</Button>
+              <Button variant="secondary" onClick={() => { setText(value); setEdit(false); }}>Avbryt</Button>
             </div>
           </div>
         ) : (
           <div>
             <div className="truncate" title={value}>{value}</div>
             <div className="mt-1">
-              <button className="text-sm text-blue-600" onClick={() => setEdit(true)}>Edit</button>
+              <button className="text-sm text-blue-600" onClick={() => setEdit(true)}>Redigera</button>
             </div>
           </div>
         )}
@@ -103,15 +103,15 @@ export default function IngestPage() {
                 const copy = { ...prepared, vocabPairs: prepared.vocabPairs.map((v, i) => i === index ? { swedish: swedish.trim(), romani: romani.trim() } : v) };
                 setPrepared(copy);
                 setEdit(false);
-              }}>Save</Button>
-              <Button variant="secondary" onClick={() => { setSwedish(pair.swedish); setRomani(pair.romani); setEdit(false); }}>Cancel</Button>
+              }}>Spara</Button>
+              <Button variant="secondary" onClick={() => { setSwedish(pair.swedish); setRomani(pair.romani); setEdit(false); }}>Avbryt</Button>
             </div>
           </div>
         ) : (
           <div className="flex items-center justify-between">
             <div className="truncate" title={`${pair.swedish} -> ${pair.romani}`}>{pair.swedish} → {pair.romani}</div>
             <div className="ml-2 flex items-center gap-2">
-              <button className="text-sm text-blue-600" onClick={() => setEdit(true)}>Edit</button>
+              <button className="text-sm text-blue-600" onClick={() => setEdit(true)}>Redigera</button>
             </div>
           </div>
         )}
@@ -135,15 +135,15 @@ export default function IngestPage() {
                 const copy = { ...prepared, parallelPairs: prepared.parallelPairs.map((p, i) => i === index ? { sv: sv.trim(), rmn: rmn.trim() } : p) };
                 setPrepared(copy);
                 setEdit(false);
-              }}>Save</Button>
-              <Button variant="secondary" onClick={() => { setSv(pair.sv); setRmn(pair.rmn); setEdit(false); }}>Cancel</Button>
+              }}>Spara</Button>
+              <Button variant="secondary" onClick={() => { setSv(pair.sv); setRmn(pair.rmn); setEdit(false); }}>Avbryt</Button>
             </div>
           </div>
         ) : (
           <div className="flex items-center justify-between">
             <div className="truncate" title={`${pair.sv} -> ${pair.rmn}`}>{pair.sv} → {pair.rmn}</div>
             <div className="ml-2">
-              <button className="text-sm text-blue-600" onClick={() => setEdit(true)}>Edit</button>
+              <button className="text-sm text-blue-600" onClick={() => setEdit(true)}>Redigera</button>
             </div>
           </div>
         )}
@@ -267,37 +267,37 @@ export default function IngestPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-4 space-y-6">
-      <h1 className="text-xl font-semibold">Ingestion</h1>
+      <h1 className="text-xl font-semibold">Inmatning</h1>
       <Card className="p-4 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="text-sm">Source type</label>
+            <label className="text-sm">Källtyp</label>
             <select className="w-full border rounded p-2" value={sourceType} onChange={(e) => setSourceType(e.target.value as SourceType)}>
-              <option value="grammar">Grammar (chunked)</option>
-              <option value="vocab">Vocabulary (pairs)</option>
-              <option value="parallel">Parallel sentences (sv||rmn per line)</option>
-              <option value="raw">Raw text (chunked)</option>
+              <option value="grammar">Grammatik (uppdeldad)</option>
+              <option value="vocab">Vokabulär (par)</option>
+              <option value="parallel">Parallella meningar (sv||rmn per rad)</option>
+              <option value="raw">Råtext (uppdeldad)</option>
             </select>
           </div>
           <div>
-            <label className="text-sm">Dialect (optional)</label>
+            <label className="text-sm">Dialekt (valfri)</label>
             <select className="w-full border rounded p-2" value={dialect} onChange={(e) => setDialect(e.target.value as Dialect)}>
-              <option value="">(none)</option>
+              <option value="">ingen</option>
               <option value="Lovari">Lovari</option>
               <option value="Kelderash">Kelderash</option>
               <option value="Arli">Arli</option>
             </select>
           </div>
           <div>
-            <label className="text-sm">Domain (optional)</label>
+            <label className="text-sm">Domän (valfri)</label>
             <input className="w-full border rounded p-2" value={domain} onChange={(e) => setDomain(e.target.value)} />
           </div>
           <div>
-            <label className="text-sm">Tags (comma-separated)</label>
+            <label className="text-sm">Taggar (kommaseparerade)</label>
             <input className="w-full border rounded p-2" value={tags} onChange={(e) => setTags(e.target.value)} />
           </div>
           <div>
-            <label className="text-sm">Filename (optional)</label>
+            <label className="text-sm">Filnamn (valfri)</label>
             <input className="w-full border rounded p-2" value={filename} onChange={(e) => setFilename(e.target.value)} />
           </div>
         </div>
@@ -317,19 +317,19 @@ export default function IngestPage() {
             )}
           </div>
           {!rawText.trim() && !file && (
-            <div className="mt-1 text-xs text-gray-500">Add some text above or choose a .txt/.csv/.md/.pdf/.docx file.</div>
+            <div className="mt-1 text-xs text-gray-500">Lägg till text ovan eller välj en .txt/.csv/.md/.pdf/.docx-fil.</div>
           )}
         </div>
         <div className="flex gap-3">
           <Button onClick={startIngestion} disabled={isLoading || (!rawText.trim() && !file)}>
-            {isLoading ? 'Preparing…' : 'Prepare preview'}
+            {isLoading ? 'Förbereder…' : 'Förhandsgranska'}
           </Button>
           {stage === 'preview' && (
             <Button onClick={approveAndEmbed} disabled={isLoading}>
-              {isLoading ? 'Embedding…' : 'Approve & Embed'}
+              {isLoading ? 'Bäddar in…' : 'Godkänn & Bädda in'}
             </Button>
           )}
-          <Button variant="secondary" onClick={loadHistory}>Refresh history</Button>
+          <Button variant="secondary" onClick={loadHistory}>Uppdatera historik</Button>
         </div>
         {lastError && (
           <div className="text-sm text-red-600">{lastError}</div>
@@ -338,16 +338,16 @@ export default function IngestPage() {
 
       {stage === 'preview' && prepared && (
         <Card className="p-4 space-y-3">
-          <div className="text-sm font-medium">Preview prepared material</div>
+          <div className="text-sm font-medium">Förhandsgranskning av förberedd material</div>
           {prepareMeta && (
             <div className="text-sm text-gray-700">
-              <div><span className="font-medium">Domain:</span> {prepareMeta.domain ?? '—'}</div>
-              <div><span className="font-medium">Tags:</span> {prepareMeta.tags.length ? prepareMeta.tags.join(', ') : '—'}</div>
+              <div><span className="font-medium">Domän:</span> {prepareMeta.domain ?? '—'}</div>
+              <div><span className="font-medium">Taggar:</span> {prepareMeta.tags.length ? prepareMeta.tags.join(', ') : '—'}</div>
             </div>
           )}
           <div className="grid md:grid-cols-3 gap-4 text-sm">
             <div>
-                  <div className="font-medium mb-1">Grammar ({prepared.grammarChunks.length})</div>
+                  <div className="font-medium mb-1">Grammatik ({prepared.grammarChunks.length})</div>
                   <ul className="space-y-1 max-h-56 overflow-auto pr-2">
                     {prepared.grammarChunks.slice(0, 50).map((g, i) => (
                       <li key={i} className="p-2 border rounded bg-white flex justify-between items-start">
@@ -358,14 +358,14 @@ export default function IngestPage() {
                           <button className="text-sm text-red-600" onClick={() => {
                             const copy = { ...prepared, grammarChunks: prepared.grammarChunks.filter((_, idx) => idx !== i) };
                             setPrepared(copy);
-                          }}>Delete</button>
+                          }}>Ta bort</button>
                         </div>
                       </li>
                     ))}
                   </ul>
             </div>
             <div>
-              <div className="font-medium mb-1">Vocabulary ({prepared.vocabPairs.length})</div>
+              <div className="font-medium mb-1">Vokabulär ({prepared.vocabPairs.length})</div>
               <ul className="space-y-1 max-h-56 overflow-auto pr-2">
                 {prepared.vocabPairs.slice(0, 100).map((p, i) => (
                   <li key={i} className="p-2 border rounded bg-white flex justify-between items-start">
@@ -376,14 +376,14 @@ export default function IngestPage() {
                       <button className="text-sm text-red-600" onClick={() => {
                         const copy = { ...prepared, vocabPairs: prepared.vocabPairs.filter((_, idx) => idx !== i) };
                         setPrepared(copy);
-                      }}>Delete</button>
+                      }}>Ta bort</button>
                     </div>
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <div className="font-medium mb-1">Parallel pairs ({prepared.parallelPairs.length})</div>
+              <div className="font-medium mb-1">Parallella par ({prepared.parallelPairs.length})</div>
               <ul className="space-y-1 max-h-56 overflow-auto pr-2">
                 {prepared.parallelPairs.slice(0, 100).map((p, i) => (
                   <li key={i} className="p-2 border rounded bg-white flex justify-between items-start">
@@ -394,14 +394,14 @@ export default function IngestPage() {
                       <button className="text-sm text-red-600" onClick={() => {
                         const copy = { ...prepared, parallelPairs: prepared.parallelPairs.filter((_, idx) => idx !== i) };
                         setPrepared(copy);
-                      }}>Delete</button>
+                      }}>Ta bort</button>
                     </div>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-          <div className="text-xs text-gray-500">Showing a preview sample. Approve to embed all prepared items.</div>
+          <div className="text-xs text-gray-500">Visar förhandsgranskningsprov. Godkänn för att bädda in alla förberedda objekt.</div>
         </Card>
       )}
 
@@ -409,13 +409,13 @@ export default function IngestPage() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium">Job: {jobId}</div>
-              <div className="text-sm text-gray-600">Status: {status?.status} · Progress: {status?.progress ?? 0}% ({status?.processedItems ?? 0}/{status?.totalItems ?? 0})</div>
+              <div className="font-medium">Jobb: {jobId}</div>
+              <div className="text-sm text-gray-600">Status: {status?.status === 'COMPLETED' ? 'SLUTFÖRT' : status?.status === 'FAILED' ? 'MISSLYCKADES' : status?.status} · Förlopp: {status?.progress ?? 0}% ({status?.processedItems ?? 0}/{status?.totalItems ?? 0})</div>
             </div>
           </div>
           {!!status?.sample?.length && (
             <div className="mt-3 space-y-1">
-              <div className="text-sm font-medium">Recent items</div>
+              <div className="text-sm font-medium">Senaste objekt</div>
               <ul className="text-sm list-disc pl-6">
                 {status.sample.map((s) => (
                   <li key={s.id} className="truncate">{s.preview}</li>
@@ -424,13 +424,13 @@ export default function IngestPage() {
             </div>
           )}
           {status?.errorMessage && (
-            <div className="mt-3 text-sm text-red-600">Error: {status.errorMessage}</div>
+            <div className="mt-3 text-sm text-red-600">Fel: {status.errorMessage}</div>
           )}
         </Card>
       )}
 
       <Card className="p-4">
-        <div className="text-sm font-medium mb-2">Recent jobs</div>
+        <div className="text-sm font-medium mb-2">Senaste jobb</div>
         <div className="grid gap-2">
           {history.map((h) => (
             <div key={h.id} className="border rounded p-2 text-sm flex justify-between">

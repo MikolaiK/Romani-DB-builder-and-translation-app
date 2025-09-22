@@ -31,7 +31,7 @@ export default async function ReviewPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Translation Review Queue</h1>
+      <h1 className="text-3xl font-bold mb-6">Kö för översättningsgranskning</h1>
       <ReviewList translations={pendingReviews as import('@prisma/client').TranslationMemory[]} />
     </div>
   );

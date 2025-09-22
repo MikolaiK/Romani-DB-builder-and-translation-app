@@ -67,7 +67,7 @@ export function ReviewList({ translations }: { translations: TranslationMemory[]
   };
 
   if (!translations.length) {
-    return <div className="text-gray-500">No pending reviews.</div>;
+    return <div className="text-gray-500">Inga väntande granskningar.</div>;
   }
 
   return (
@@ -75,10 +75,10 @@ export function ReviewList({ translations }: { translations: TranslationMemory[]
       <div className="flex flex-wrap items-center gap-3 p-2 bg-gray-50 border rounded">
         <label className="flex items-center gap-2 text-xs">
           <input type="checkbox" checked={allSelected} onChange={toggleAll} />
-          Select all
+          Välj alla
         </label>
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-600">Batch score:</span>
+          <span className="text-gray-600">Batchbetyg:</span>
           {(['A','B','C','D'] as const).map(s => (
             <button
               key={s}
@@ -86,12 +86,12 @@ export function ReviewList({ translations }: { translations: TranslationMemory[]
               className={`h-7 px-2 rounded border text-xs ${batchScore===s ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
             >{s}</button>
           ))}
-          <button onClick={() => setBatchScore('')} className="h-7 px-2 rounded border text-xs text-gray-600">Clear</button>
+          <button onClick={() => setBatchScore('')} className="h-7 px-2 rounded border text-xs text-gray-600">Rensa</button>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button className="h-8 px-3 text-xs" onClick={saveBatchScores} disabled={!anySelected}>Save</Button>
-          <Button className="h-8 px-3 text-xs" variant="secondary" onClick={() => runBatch('REJECT')} disabled={!anySelected}>Reject</Button>
-          <Button className="h-8 px-3 text-xs" variant="outline" onClick={() => runBatch('NEEDS_REVISION')} disabled={!anySelected}>Needs revision</Button>
+          <Button className="h-8 px-3 text-xs" onClick={saveBatchScores} disabled={!anySelected}>Spara</Button>
+          <Button className="h-8 px-3 text-xs" variant="secondary" onClick={() => runBatch('REJECT')} disabled={!anySelected}>Avvisa</Button>
+          <Button className="h-8 px-3 text-xs" variant="outline" onClick={() => runBatch('NEEDS_REVISION')} disabled={!anySelected}>Behöver revidering</Button>
         </div>
       </div>
 
@@ -106,17 +106,17 @@ export function ReviewList({ translations }: { translations: TranslationMemory[]
                     checked={!!selected[t.id]}
                     onChange={(e) => setSelected(prev => ({ ...prev, [t.id]: e.target.checked }))}
                   />
-                  Select
+                  Välj
                 </label>
-                <div className="mt-1 text-[10px] uppercase text-gray-500">Source</div>
+                <div className="mt-1 text-[10px] uppercase text-gray-500">Källa</div>
                 <div className="text-sm whitespace-normal break-words" title={t.sourceText}>{t.sourceText}</div>
               </div>
               <div className="col-span-2">
-                <div className="text-[10px] uppercase text-gray-500">Target</div>
+                <div className="text-[10px] uppercase text-gray-500">Mål</div>
                 <div className="text-sm text-gray-800 whitespace-normal break-words" title={t.correctedText || t.targetText}>{t.correctedText || t.targetText}</div>
               </div>
               <div className="col-span-1 text-[11px] text-gray-600">
-                <div>{t.domain || '—'} • Q: {t.qualityScore}</div>
+                <div>{t.domain || '—'} • K: {t.qualityScore}</div>
               </div>
               <div className="col-span-2">
                 <div className="text-[10px] uppercase text-gray-500">Score</div>
@@ -131,7 +131,7 @@ export function ReviewList({ translations }: { translations: TranslationMemory[]
                         className={`w-full h-8 rounded border text-xs ${itemScore[t.id]===s ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:bg-gray-50'}`}
                       >{s}</button>
                       <div className="mt-1 text-[10px] text-gray-500">
-                        {s==='A'?'Excellent':s==='B'?'Good':s==='C'?'Acceptable':'Poor'}
+                        {s==='A'?'Utmärkt':s==='B'?'Bra':s==='C'?'Acceptabel':'Dålig'}
                       </div>
                     </div>
                   ))}
@@ -141,7 +141,7 @@ export function ReviewList({ translations }: { translations: TranslationMemory[]
                   <button
                     className="text-xs text-blue-700 hover:underline"
                     onClick={() => setExpanded(prev => ({ ...prev, [t.id]: !prev[t.id] }))}
-                  >{expanded[t.id] ? 'Hide edit' : 'Edit translation'}</button>
+                  >{expanded[t.id] ? 'Dölj redigering' : 'Redigera översättning'}</button>
                 </div>
 
                 {expanded[t.id] && (
@@ -155,16 +155,16 @@ export function ReviewList({ translations }: { translations: TranslationMemory[]
                       />
                     </div>
                     <div className="flex gap-2 mt-2">
-                      <Button className="h-8 px-3 text-xs" onClick={() => saveInline(t.id)}>Save</Button>
+                      <Button className="h-8 px-3 text-xs" onClick={() => saveInline(t.id)}>Spara</Button>
                       <Button className="h-8 px-3 text-xs" variant="secondary" onClick={async () => {
-                        const notes = prompt('Reason for rejection?') || '';
+                        const notes = prompt('Anledning till avvisning?') || '';
                         await fetch('/api/review', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ id: t.id, action: 'REJECT', notes, qualityScore: itemScore[t.id] || undefined }),
                         });
                         window.location.reload();
-                      }}>Reject</Button>
+                      }}>Avvisa</Button>
                     </div>
                   </>
                 )}

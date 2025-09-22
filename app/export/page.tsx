@@ -32,7 +32,7 @@ export default async function ExportPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Dataset Export</h1>
+      <h1 className="text-3xl font-bold mb-6">Export av dataset</h1>
       <ExportInterface 
         totalTranslations={stats._count.id}
         qualityBreakdown={qualityBreakdown as { qualityScore: string; _count: { id: number } }[]}

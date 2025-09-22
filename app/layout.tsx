@@ -6,8 +6,8 @@ import { SettingsProvider } from '@/components/settings/SettingsProvider';
 import { DialectSelector } from '@/components/settings/DialectSelector';
 
 export const metadata = {
-  title: 'Romani Translation AI',
-  description: 'AI-powered Swedish to Romani translation with expert-in-the-loop',
+  title: 'AI system för romaniöversättning',
+  description: 'AI-drivet översättning från svenska till romani med expertgranskning',
 };
 
 export default function RootLayout({
@@ -16,18 +16,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="sv">
       <body className="min-h-screen bg-gray-50 text-gray-900">
         <SettingsProvider>
           <ToastProvider>
             <header className="border-b bg-white">
               <nav className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-                <Link href="/" className="font-semibold">Romani Translation AI</Link>
+                <Link href="/" className="font-semibold">AI system för romaniöversättning</Link>
                 <div className="ml-auto flex items-center gap-4 text-sm">
                   <DialectSelector />
-                  <Link href="/review" className="hover:underline">Review</Link>
-                  <Link href="/ingest" className="hover:underline">Ingestion</Link>
-                  <Link href="/export" className="hover:underline">Export</Link>
+                  <Link href="/review" className="hover:underline">Granska</Link>
+                  <Link href="/ingest" className="hover:underline">Inmatning</Link>
+                  <Link href="/export" className="hover:underline">Exportera</Link>
                 </div>
               </nav>
             </header>

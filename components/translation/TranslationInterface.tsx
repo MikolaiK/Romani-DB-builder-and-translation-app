@@ -75,7 +75,7 @@ export function TranslationInterface() {
 
     setIsTranslating(true);
     try {
-  toast({ title: 'Connecting to Gemini 2.5…', description: 'Attempting primary model' });
+  toast({ title: 'Ansluter till Gemini 2.5…', description: 'Försöker primär modell' });
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,16 +96,16 @@ export function TranslationInterface() {
 
       const result = await response.json();
       if (result?.attempts > 1) {
-        toast({ title: 'Connected to Gemini 2.5', description: `Succeeded after ${result.attempts} attempts` });
+        toast({ title: 'Ansluten till Gemini 2.5', description: `Lyckades efter ${result.attempts} försök` });
       } else {
-        toast({ title: 'Connected to Gemini 2.5' });
+        toast({ title: 'Ansluten till Gemini 2.5' });
       }
       setTranslation(result);
       setCorrection(result.translatedText);
     } catch (error) {
       toast({
-        title: 'Translation Error',
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        title: 'Översättningsfel',
+        description: error instanceof Error ? error.message : 'Okänt fel uppstod',
         variant: 'destructive',
       });
     } finally {
@@ -137,8 +137,8 @@ export function TranslationInterface() {
       }
 
       toast({
-        title: 'Correction Saved',
-        description: 'Thank you for improving the translation!',
+        title: 'Korrigering sparad',
+        description: 'Tack för att du förbättrar översättningen!',
       });
 
       // Reset form
@@ -149,8 +149,8 @@ export function TranslationInterface() {
       setDomain('');
     } catch (error) {
       toast({
-        title: 'Save Error',
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        title: 'Spara fel',
+        description: error instanceof Error ? error.message : 'Okänt fel uppstod',
         variant: 'destructive',
       });
     } finally {
@@ -161,8 +161,8 @@ export function TranslationInterface() {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Swedish to Romani Translation</h1>
-        <p className="text-gray-600">AI-powered translation with expert correction workflow</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Översättning från svenska till romani</h1>
+        <p className="text-gray-600">En självlärande översättningsassistent</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_480px_320px] gap-6">
@@ -170,12 +170,12 @@ export function TranslationInterface() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span>Swedish Input</span>
+              <span>Svensk inmatning</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="Enter Swedish text to translate..."
+              placeholder="Ange svensk text att översätta..."
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
               rows={6}
@@ -185,7 +185,7 @@ export function TranslationInterface() {
             <div className="space-y-2">
               <input
                 type="text"
-                placeholder="Context (optional)"
+                placeholder="Kontext (valfri)"
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
@@ -196,27 +196,27 @@ export function TranslationInterface() {
                 onChange={(e) => setDomain(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
-                <option value="">Select domain (optional)</option>
-                <option value="conversation">Conversation</option>
-                <option value="medical">Medical</option>
-                <option value="legal">Legal</option>
-                <option value="technical">Technical</option>
-                <option value="literature">Literature</option>
+                <option value="">Välj domän (valfri)</option>
+                <option value="conversation">Samtal</option>
+                <option value="medical">Medicinsk</option>
+                <option value="legal">Juridisk</option>
+                <option value="technical">Teknisk</option>
+                <option value="literature">Litteratur</option>
               </select>
             </div>
 
             <Button onClick={handleTranslate} disabled={!sourceText.trim() || isTranslating} className="w-full">
               {isTranslating ? (<>
                 <Icon.spinner />
-                Translating...
+                Översätter...
               </>) : (<>
                 <Icon.search />
-                Translate
+                Översätt
               </>)}
             </Button>
             {translation && (
               <Button onClick={() => setShowDebug(!showDebug)} variant="outline" className="w-full mt-2">
-                {showDebug ? 'Hide AI Context' : 'Show AI Context'}
+                {showDebug ? 'Dölj AI-kontext' : 'Visa AI-kontext'}
               </Button>
             )}
           </CardContent>
@@ -226,10 +226,10 @@ export function TranslationInterface() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span>AI Translation</span>
+              <span>AI-översättning</span>
         {translation && (
                 <Badge variant={translation.confidence > 80 ? 'default' : 'secondary'}>
-          {translation.confidence}% confidence
+          {translation.confidence}% konfidens
                 </Badge>
               )}
             </CardTitle>
@@ -247,7 +247,7 @@ export function TranslationInterface() {
 
                 {translation.explanation && (
                   <div className="text-sm text-gray-600">
-                    <strong>Explanation:</strong> {translation.explanation}
+                    <strong>Förklaring:</strong> {translation.explanation}
                   </div>
                 )}
 
@@ -281,37 +281,37 @@ export function TranslationInterface() {
                 )} */}
                 {showDebug && translation?.debugInfo && (
                   <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-                    <h3 className="font-bold mb-2">AI Context Debug</h3>
+                    <h3 className="font-bold mb-2">AI-kontext felsökning</h3>
                     <details className="mb-2">
-                      <summary className="cursor-pointer">Prompt Sent to AI</summary>
+                      <summary className="cursor-pointer">Prompt skickad till AI</summary>
                       <pre className="mt-2 p-2 bg-white rounded text-xs overflow-auto max-h-40">
                         {translation.debugInfo.prompt}
                       </pre>
                     </details>
                     <details className="mb-2">
-                      <summary className="cursor-pointer">Retrieval Parameters</summary>
+                      <summary className="cursor-pointer">Hämtnings parametrar</summary>
                       <pre className="mt-2 p-2 bg-white rounded text-xs">
                         {JSON.stringify(translation.debugInfo.retrievalParams, null, 2)}
                       </pre>
                     </details>
                     <details>
-                      <summary className="cursor-pointer">Examples with Source Details</summary>
+                      <summary className="cursor-pointer">Exempel med käll detaljer</summary>
                       <div className="mt-2 space-y-2">
                         {translation.debugInfo.examplesWithSource.map((example, idx) => (
                           <div key={idx} className="p-2 bg-white rounded text-xs">
-                            <div><strong>Table:</strong> {example.tableName}</div>
-                            <div><strong>Source:</strong> {example.translation.sourceText}</div>
-                            <div><strong>Target:</strong> {example.translation.targetText}</div>
-                            <div><strong>Score:</strong> {example.scoringDetails.finalScore.toFixed(3)}</div>
+                            <div><strong>Tabell:</strong> {example.tableName}</div>
+                            <div><strong>Källa:</strong> {example.translation.sourceText}</div>
+                            <div><strong>Mål:</strong> {example.translation.targetText}</div>
+                            <div><strong>Betyg:</strong> {example.scoringDetails.finalScore.toFixed(3)}</div>
                             <details>
-                              <summary className="cursor-pointer">Scoring Details</summary>
+                              <summary className="cursor-pointer">Betygsdetaljer</summary>
                               <div className="ml-2">
-                                <div>Semantic: {example.scoringDetails.semanticScore.toFixed(3)}</div>
-                                <div>Lexical: {example.scoringDetails.lexicalScore.toFixed(3)}</div>
-                                <div>Exact Match Boost: {example.scoringDetails.exactMatchBoost.toFixed(3)}</div>
-                                <div>Quality Boost: {example.scoringDetails.qualityBoost.toFixed(3)}</div>
-                                <div>Corrected Boost: {example.scoringDetails.correctedBoost.toFixed(3)}</div>
-                                <div>Recency Boost: {example.scoringDetails.recencyBoost.toFixed(3)}</div>
+                                <div>Semantisk: {example.scoringDetails.semanticScore.toFixed(3)}</div>
+                                <div>Lexikal: {example.scoringDetails.lexicalScore.toFixed(3)}</div>
+                                <div>Exakt match boost: {example.scoringDetails.exactMatchBoost.toFixed(3)}</div>
+                                <div>Kvalitetsboost: {example.scoringDetails.qualityBoost.toFixed(3)}</div>
+                                <div>Korrigeringsboost: {example.scoringDetails.correctedBoost.toFixed(3)}</div>
+                                <div>Aktualitetsboost: {example.scoringDetails.recencyBoost.toFixed(3)}</div>
                               </div>
                             </details>
                           </div>
@@ -322,7 +322,7 @@ export function TranslationInterface() {
                 )}
               </div>
             ) : (
-              <div className="text-gray-40 text-center py-8">Translation will appear here</div>
+              <div className="text-gray-40 text-center py-8">Översättning visas här</div>
             )}
           </CardContent>
         </Card>
@@ -330,11 +330,11 @@ export function TranslationInterface() {
         {/* Expert Correction Column */}
         <Card>
           <CardHeader>
-            <CardTitle>Expert Correction</CardTitle>
+            <CardTitle>Expertkorrigering</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="Correct the translation if needed..."
+              placeholder="Korrigera översättningen vid behov..."
               value={correction}
               onChange={(e) => setCorrection(e.target.value)}
               rows={6}
@@ -351,17 +351,17 @@ export function TranslationInterface() {
               >
                 {isSaving ? (<>
                   <Icon.spinner />
-                  Saving...
+                  Sparar...
                 </>) : (<>
                   <Icon.check />
-                  Save Correction
+                  Spara korrigering
                 </>)}
               </Button>
               
               {translation && correction === translation.translatedText && (
                 <Button onClick={handleSaveCorrection} variant="outline" disabled={isSaving}>
                   <Icon.check />
-                  Approve
+                  Godkänn
                 </Button>
               )}
             </div>
@@ -369,8 +369,8 @@ export function TranslationInterface() {
             {translation && (
               <div className="text-xs text-gray-500">
                 {correction === translation.translatedText 
-                  ? "Click 'Approve' if the translation is correct, or edit it first."
-                  : "You've made changes. Click 'Save Correction' to help improve the AI."}
+                  ? "Klicka 'Godkänn' om översättningen är korrekt, eller redigera först."
+                  : "Du har gjort ändringar. Klicka 'Spara korrigering' för att hjälpa till att förbättra AI:n."}
               </div>
             )}
           </CardContent>
