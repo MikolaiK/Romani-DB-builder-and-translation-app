@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Translation not found' }, { status: 404 });
     }
     
-    const { source_text: sourceText, target_text: targetText, dialect: dialectRaw, domain, tags } = rows[0];
+    const { source_text: sourceText, target_text: targetText, dialect: dialectRaw } = rows[0];
   type Dialect = 'Lovari' | 'Kelderash' | 'Arli';
   let dialect = dialectRaw as string | undefined;
     if (dialect !== 'Lovari' && dialect !== 'Kelderash' && dialect !== 'Arli') {
@@ -87,7 +87,6 @@ export async function POST(request: NextRequest) {
           const dialectRow = (row.dialect as string) || '';
           const domainRow = row.domain || '';
           const src = row.sourceText || '';
-          const orig = row.targetText || '';
           const corr = row.correctedText || row.targetText || '';
 
           const insightData = await generateLearningInsight(
@@ -114,7 +113,7 @@ export async function POST(request: NextRequest) {
             }
           });
 
-          const ruleEmbedding = await generateEmbedding(insightData.rule, { dialect: dialectRow as any });
+          const ruleEmbedding = await generateEmbedding(insightData.rule, { dialect: typedDialect });
 
           try {
             const updated = await prisma.learningInsight.update({ where: { id: placeholder.id }, data: {
