@@ -458,7 +458,7 @@ export async function searchRomaniLexicon(
     let keywordBoost = '';
     if (keywords && keywords.length > 0) {
       // Create a boost factor based on keyword matches
-      const keywordMatches = keywords.map((keyword, index) =>
+      const keywordMatches = keywords.map((keyword) =>
         `CASE WHEN source_text ILIKE '%${keyword}%' THEN 0.3 ELSE 0 END`
       ).join(' + ');
       keywordBoost = ` + ${keywordMatches}`;
