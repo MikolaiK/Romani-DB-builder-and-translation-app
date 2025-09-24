@@ -1,42 +1,44 @@
-# Project Progress — Romani Translation App
+# Project Progress — Romani Translation AI
 
-Last updated: 2025-09-09
+Last updated: 2025-09-24
 
 This document tracks implementation progress against `dev-spec-romani-trans-app.md`. It gives a quick, practical overview of what is built, how to run it, and what remains. Use it alongside the spec to plan next work.
 
 ## Overview
 
 - Stack: Next.js (App Router), TypeScript, Tailwind, Prisma, PostgreSQL (pgvector + pg_trgm), Vercel AI SDK (Gemini), minimal local UI primitives.
-- Core features live: Translation UI with expert-in-the-loop, hybrid retrieval over translation memory, review and scoring workflow (batch + per-item) with inline corrections, dataset export, ingestion pipeline for adding new corpora.
+- Core features live: Translation UI with expert-in-the-loop, multi-source retrieval over translation memory, grammar rules, vocabulary, and learning insights, intelligent feedback loop that learns from expert corrections, review and scoring workflow (batch + per-item) with inline corrections, dataset export, ingestion pipeline for adding new corpora.
 - Dev-friendly: Optional Clerk auth (off by default), auth fallback for local, deterministic embedding fallback, seeding endpoint for pending items.
 
 ## Implemented vs Spec
 
 - Data model (Prisma + Postgres)
-  - Models: `TranslationMemory`, `Correction`, `ReviewItem` (reserved), `KnowledgeItem`, `RomaniLexicon`, `RomaniGrammar`, `RomaniStyle`, `IngestionJob`, `IngestionRecord`.
+  - Models: `TranslationMemory`, `Correction`, `ReviewItem` (reserved), `KnowledgeItem`, `RomaniLexicon`, `RomaniGrammar`, `RomaniStyle`, `IngestionJob`, `IngestionRecord`, `LearningInsight`.
   - Vector columns stored via `pgvector` and written using raw SQL (`Unsupported("vector(1536)")` + `$executeRawUnsafe`).
   - Trigram extension (`pg_trgm`) used for lexical similarity.
   - Unified embedding strategy: Single `embedding` column instead of separate `source_embedding` and `target_embedding` columns.
 
 - Retrieval
-  - Hybrid search: semantic (cosine over embedding) + lexical (trigram) + boosts (quality, recency) in `lib/retrieval.ts`.
+  - Multi-source retrieval: semantic (cosine over embedding) + lexical (trigram) + boosts (quality, recency) across translation memory, grammar rules, vocabulary, and learning insights in `lib/retrieval.ts`.
   - Prefers corrected entries: lexical similarity uses `COALESCE(corrected_text, target_text)`. Adds a corrected boost so corrected items surface more often.
   - Updated to use single embedding column for semantic similarity.
+  - Unified retrieval service that queries all four data sources in parallel and returns structured results for use in translation prompts.
 
 - AI translation
-  - `lib/ai.ts` builds prompts and supports examples from similar corrected translations (expert-in-the-loop guidance).
+  - `lib/ai.ts` builds structured prompts incorporating learning insights, grammar rules, vocabulary, and examples from similar corrected translations (expert-in-the-loop guidance).
   - Uses Gemini via Vercel AI SDK; graceful local fallback if no key.
   - `lib/embedding.ts` generates embeddings with provider + deterministic fallback.
+  - `lib/ai-analyzer.ts` implements AI analyzer service that generates learning insights from expert corrections.
 
 - APIs
-  - Translation: `POST /api/translate` (retrieves similar items first, passes examples to AI, returns guidance + confidence + similar list)
-  - Save correction/approval: `POST /api/correct` (persists text, sets quality/status, updates embeddings, logs `Correction`)
+  - Translation: `POST /api/translate` (performs unified retrieval across all data sources, passes structured examples to AI, returns guidance + confidence + retrieval data)
+  - Save correction/approval: `POST /api/correct` (persists text, sets quality/status, updates embeddings, logs `Correction`, triggers intelligent feedback loop)
   - Review actions:
     - `POST /api/review` (single approve/reject/needs-revision, optional score)
     - `POST /api/review/batch` (batch approve/reject/needs-revision, optional score)
     - `POST /api/review/correct` (inline edit + approve, optional score; updates target embedding and logs `Correction`)
     - NEW scoring-only API: `POST /api/review/score` (persist per-item or batch scores without changing reviewStatus)
-  - Export: `GET /api/export?format=jsonl|csv&minQuality=A|B|C|D` (defaults jsonl, C)
+ - Export: `GET /api/export?format=jsonl|csv&minQuality=A|B|C|D` (defaults jsonl, C)
   - Dev seeding: `POST /api/dev/seed-pending` (adds PENDING items for testing)
   - Ingestion pipeline:
     - `POST /api/ingest/prepare` (parse and prepare text for ingestion)
@@ -47,7 +49,7 @@ This document tracks implementation progress against `dev-spec-romani-trans-app.
 - UI (App Router)
   - Layout: `app/layout.tsx` with simple nav (Translate, Review, Export, Ingestion) and Toast provider.
   - Translate: `components/translation/TranslationInterface.tsx`
-    - Input (source text, context, optional domain), AI translation, similar examples, correction column with save.
+    - Input (source text, context, optional domain, dialect, style), AI translation, similar examples from all data sources, correction column with save.
   - Review: `app/review/page.tsx` + `components/review/ReviewList.tsx`
     - Per-row scoring buttons (A/B/C/D) with captions; toggleable; selecting a score also selects the row.
     - Batch toolbar: select all/none, optional batch score, primary Save (persist scores), secondary Reject/Needs revision.
@@ -101,8 +103,8 @@ npm run db:indexes
 ## Current behavior (E2E)
 
 - Translate flow
-  - Retrieves similar translations; builds examples preferring corrected text.
-  - AI returns translation + confidence; user can approve or correct. Saving persists embeddings and optional correction.
+  - Performs unified retrieval across translation memory, grammar rules, vocabulary, and learning insights; builds structured examples from all data sources.
+  - AI returns translation + confidence + explanation; user can approve or correct. Saving persists embeddings and optional correction.
 
 - Review/Scoring flow
   - Primary: scoring (A/B/C/D). Click score on rows, they auto-select; use batch Save to persist scores.
@@ -120,6 +122,12 @@ npm run db:indexes
   - Commit approved content with embeddings generation
   - Track ingestion progress and view history
 
+- Intelligent Feedback Loop
+  - When users make corrections, the system automatically analyzes the correction to extract learning insights
+  - AI analyzer generates rules, categories, and explanations from expert corrections
+  - Learning insights are stored with embeddings for future retrieval
+ - These insights are incorporated into future translation prompts to improve quality
+
 ## Data model quick reference
 
 - `TranslationMemory`
@@ -129,13 +137,14 @@ npm run db:indexes
   - reviewed_at?, reviewed_by?, review_notes?
   - embedding? (pgvector via raw SQL)
 - `Correction`: original_text, corrected_text, type, severity, explanation, translation_id
+- `LearningInsight`: rule, category, confidence, explanation, domain, tags, embedding, source_translation_memory_id
 - `KnowledgeItem`: optional RAG content, embedding
 - `RomaniLexicon`: vocabulary pairs, embedding, tags
 - `RomaniGrammar`: grammar content, embedding, tags
 - `RomaniStyle`: style content, embedding, tags
 - `ReviewItem`: reserved for advanced queueing/assignments (not yet used)
 - `IngestionJob`: tracks ingestion jobs
-- `IngestionRecord`: tracks individual items in ingestion jobs
+- `IngestionRecord`: tracks individual items ingestion jobs
 
 ## Quality gates
 
@@ -149,6 +158,7 @@ npm run db:indexes
 - Retrieval parameters: Tuned conservatively; can be adjusted in `lib/config.ts`.
 - Clerk integration: Local uses fallback; production paths ready once keys provided.
 - Vector indexes: Successfully created HNSW indexes for all vector columns with 1536-dimensional embeddings, enabling high-quality vector search.
+- Intelligent feedback loop: Learning insights are generated synchronously after corrections to ensure proper ordering during development.
 
 ## Next prioritized work (aligned to spec)
 
@@ -171,6 +181,10 @@ npm run db:indexes
 6) Tests & CI
    - Unit tests for retrieval scoring and API payloads; basic E2E for review & export.
    - Integration tests for ingestion pipeline
+7) Intelligent feedback loop improvements
+   - Asynchronous processing for learning insights generation to improve performance
+   - Enhanced analysis of corrections to extract more sophisticated patterns
+   - Better categorization and confidence scoring for learning insights
 
 ## Changelog (highlights)
 
@@ -183,6 +197,18 @@ npm run db:indexes
 - Ingestion pipeline: UI, API endpoints, and backend processing for adding new corpora
 - Unified embedding strategy: Single `embedding` column instead of separate `source_embedding` and `target_embedding` columns
 - Vector index creation utilities for handling high-dimensional embeddings
+- Intelligent feedback loop: AI analyzer generates learning insights from expert corrections
+- Multi-source retrieval: Unified retrieval across translation memory, grammar rules, vocabulary, and learning insights
+- Structured translation prompts: Incorporates learning insights, grammar rules, vocabulary, and examples into translation context
+
+### 2025-09-24 — Intelligent Feedback Loop Implementation
+
+- Implemented AI analyzer service that generates learning insights from expert corrections
+- Added LearningInsight model to database schema with embeddings for retrieval
+- Created multi-source retrieval system that includes learning insights in translation prompts
+- Enhanced translation API to use structured prompts incorporating all data sources
+- Updated correction API to trigger learning loop that analyzes corrections and generates insights
+- Improved retrieval system with unified retrieval function that queries all four data sources in parallel
 
 ### 2025-09-06 — Successful migration to 1536-dimensional embeddings with HNSW indexes
 

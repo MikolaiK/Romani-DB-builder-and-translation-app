@@ -1,20 +1,24 @@
-# Romani Translation App
+# Romani Translation AI
 
-Advanced AI-powered Swedish to Romani translation platform with expert-in-the-loop workflow for high-quality dataset generation.
+Advanced AI-powered Swedish to Romani translation platform with expert-in-the-loop workflow and intelligent feedback loop for continuous improvement of translation quality.
 
 ## Overview
 
-This application provides a sophisticated translation system that combines AI-powered translation with human expert corrections to continuously improve translation quality. The system uses hybrid search (semantic + lexical) over a vector database to provide context-aware translations.
+This application provides a sophisticated translation system that combines AI-powered translation with human expert corrections to continuously improve translation quality. The system features an intelligent feedback loop that learns from expert corrections and incorporates grammar rules, vocabulary, and learning insights into future translations. It uses hybrid search (semantic + lexical) across multiple data sources (translation memory, grammar rules, vocabulary, and learning insights) over a vector database to provide context-aware translations with dialect support.
 
 ## Key Features
 
-- **AI Translation**: Powered by Google Gemini with context-aware suggestions
-- **Expert-in-the-loop**: Human corrections improve future translations
+- **AI Translation**: Powered by Google Gemini with context-aware suggestions and dialect support
+- **Expert-in-the-loop RAG Pipeline**: AI suggestions → Expert corrections → Intelligent feedback loop
+- **Intelligent Feedback Loop**: AI analyzer generates learning insights from expert corrections that improve future translations
+- **Multi-Source Retrieval**: Unified search across translation memory, grammar rules, vocabulary, and learning insights
 - **Hybrid Search**: Combines semantic (embeddings) and lexical search for better results
-- **Ingestion Pipeline**: Upload and process various text formats (TXT, CSV, PDF, DOCX)
+- **Dialect Support**: Multiple Romani dialects (Lovari, Kelderash, Arli) with appropriate translation styles
+- **Ingestion Pipeline**: Upload and process various text formats (TXT, CSV, PDF, DOCX) with AI-powered parsing
 - **Review Workflow**: Score and review translations with batch operations
 - **Dataset Export**: Export high-quality translation datasets in JSONL or CSV format
 - **Advanced Embedding System**: 1536-dimensional embeddings with HNSW vector indexes for high-quality search
+- **Structured Translation Prompts**: Incorporates learning insights, grammar rules, vocabulary, and examples into translation context
 
 ## Documentation
 
