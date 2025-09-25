@@ -158,7 +158,35 @@ export function TranslationInterface() {
     }
   };
 
-  return (
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateText = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/generate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: domain || 'general' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate text');
+      }
+
+      const data = await response.json();
+      setSourceText(data.swedish_text);
+    } catch (error) {
+      toast({
+        title: 'Genereringsfel',
+        description: error instanceof Error ? error.message : 'Okänt fel uppstod',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+ return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Översättning från svenska till romani</h1>
@@ -174,6 +202,26 @@ export function TranslationInterface() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Button
+              id="generate-text-btn"
+              onClick={handleGenerateText}
+              disabled={isGenerating}
+              className="w-full"
+              variant="default"
+            >
+              {isGenerating ? (
+                <>
+                  <Icon.spinner />
+                  Genererar...
+                </>
+              ) : (
+                <>
+                  <span className="mr-2">📝</span>
+                  Generera text
+                </>
+              )}
+            </Button>
+            
             <Textarea
               placeholder="Ange svensk text att översätta..."
               value={sourceText}
