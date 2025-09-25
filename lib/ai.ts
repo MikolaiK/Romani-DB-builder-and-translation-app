@@ -4,9 +4,9 @@ import type { PreparedPayload } from './ingestion';
 // no config import needed here
 
 // Initialize Google AI provider
-// Primary is configurable; we default to 2.5-flash, but fall back to 1.5-flash on schema edge-cases
-const PRIMARY_MODEL_NAME = process.env.GEMINI_PRIMARY_MODEL || 'gemini-2.5-flash';
-const FALLBACK_MODEL_NAME = process.env.GEMINI_FALLBACK_MODEL || 'gemini-1.5-flash';
+// Primary is configurable; we default to 2.5-pro, but fall back to 2.5-flash on schema edge-cases
+const PRIMARY_MODEL_NAME = process.env.GEMINI_PRIMARY_MODEL || 'gemini-2.5-pro';
+const FALLBACK_MODEL_NAME = process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash';
 // Dedicated translate API key support
 const TRANSLATE_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY_TRANSLATE || process.env.GEMINI_TRANSLATE_API_KEY;
 const ACTIVE_TRANSLATE_KEY = TRANSLATE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
