@@ -6,7 +6,7 @@ import { SettingsProvider } from '@/components/settings/SettingsProvider';
 import { DialectSelector } from '@/components/settings/DialectSelector';
 
 export const metadata = {
-  title: 'AI system för romaniöversättning',
+  title: 'AI system för romska',
   description: 'AI-drivet översättning från svenska till romani med expertgranskning',
 };
 
@@ -22,7 +22,7 @@ export default function RootLayout({
           <ToastProvider>
             <header className="border-b bg-white">
               <nav className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-                <Link href="/" className="font-semibold">AI system för romaniöversättning</Link>
+                <Link href="/" className="font-semibold">AI system för romska</Link>
                 <div className="ml-auto flex items-center gap-4 text-sm">
                   <DialectSelector />
                   <Link href="/review" className="hover:underline">Granska</Link>
