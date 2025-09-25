@@ -151,12 +151,13 @@ ${examplesBlock}
 Please provide ALL of the following in this exact format:
 Translation: [romani text]
 Confidence: [0-100]
-Explanation: [1-2 short sentences on key choices or terms]
+Explanation: [1-2 short sentences in Swedish on key choices or terms]
 
 Constraints:
 - Keep the response concise. Avoid any hidden or internal reasoning.
 - Do NOT include analysis steps; just produce the final answers in three lines.
 - Stay within 40 tokens for the translation and 1-2 short sentences for the explanation.
+- Provide the explanation in Swedish, not in English.
 `.trim();
 }
 
@@ -232,13 +233,14 @@ ${examplesBlock}
 Please provide ALL of the following in this exact format:
 Translation: [romani text]
 Confidence: [0-100]
-Explanation: [1-2 short sentences on key choices or terms]
+Explanation: [1-2 short sentences in Swedish on key choices or terms]
 
 Constraints:
 - Keep the response concise. Avoid any hidden or internal reasoning.
 - Do NOT include analysis steps; just produce the final answers in three lines.
 - Stay within 40 tokens for the translation and 1-2 short sentences for the explanation.
 - Apply the learning insights, grammar rules, and vocabulary as appropriate to the translation.
+- Provide the explanation in Swedish, not in English.
 `.trim();
 }
 
